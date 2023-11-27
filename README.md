@@ -36,7 +36,7 @@ myNode.parent = myRootNode # 将myNode节点的父节点设置为myRootNode节�
 print(myNode.parent.children[0].data['content'])
 ```
 <details>
-    <summary>输出逻辑</summary>
+    <summary style="cursor: pointer;">输出逻辑</summary>
 &emsp;&emsp;myNode.parent 访问其父节点，即myRootNode<br>
 &emsp;&emsp;myNode.parent.children[0] 访问myRootNode下的第一个子节点，由于myNode是唯一一个选择它作为父节点的节点，固然第一个子节点是myNode<br>
 &emsp;&emsp;myNode.parent.chidlren[0].data 访问该节点的数据<br>
@@ -99,6 +99,50 @@ print(myDocTree)
 - 文档大小：6.57KB
 - 文档内容：# 标题A...(3325字)...段正文……
 ```
+<details>
+<summary style="cursor: pointer;"><strong>稍微复杂的例子</strong></summary>
+
+**示例程序**
+
+``` py
+# example4.py
+from nodoc import docNode, docTree
+
+rootNode = docNode(kind='text', content='')
+titleNodeA = docNode(kind = 'title', content = '标题A')
+titleNodeB = docNode(kind = 'title', content = '标题B')
+titleNodeAa = docNode(kind = 'title', content = '标题Aa')
+contextNodeA = docNode(content = '我是一段正文，一段正文……' * 5)
+contextNodeB = docNode(content = '我是一段正文，一段正文……' * 5)
+titleNodeAa.parent = titleNodeA
+contextNodeA.parent = titleNodeA
+contextNodeB.parent = titleNodeB
+titleNodeA.parent = rootNode
+titleNodeB.parent = rootNode
+myDocTree = docTree(rootNode, '我的文档树')
+myDocTree.update()
+print(myDocTree.document, myDocTree)
+```
+
+**输出**
+
+``` console
+> python example4.py
+# 标题A
+## 标题Aa
+我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……
+# 标题B
+我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……我是一段正文，一段正文……
+
+我的文档树
+- 创建时间：%Y-%m-%d %H:%M:%S
+- 修改时间：%Y-%m-%d %H:%M:%S
+- 访问时间：%Y-%m-%d %H:%M:%S
+- 文档大小：364.00B
+- 文档内容：# 标题...(143字)...段正文……
+```
+
+</details>
 
 # 贡献
 - **HangBack**: 构建整个项目
