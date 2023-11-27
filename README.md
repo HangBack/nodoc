@@ -7,6 +7,14 @@ Nodoc
 
 &emsp;&emsp;本工具可将许多文档数据节点化，将文档以这种形式分层后，我们将更容易便捷的操作文档。节点操作也是一些文档类型中常用的数据分类手段，当我们将所有文档统一化为一种结构，这会使得文档操作变得更加灵活。
 
+# 安装
+本项目使用python 3.12版本，将项目clone到本地<br>
+`git clone https://github.com/HangBack/nodoc.git`<br>
+创建python 3.12的conda环境<br>
+`conda create -n {env_name} python==3.12`<br>
+激活环境，并使用python 3.12解释器<br>
+`conda activate {env_name}`<br>
+
 # 快速上手
 ## 基本节点
 &emsp;&emsp;在Nodoc中，我们倾向于链式调用的方式操作节点属性，下面这个示例中描述了我们如何创建一个基本节点。<br>
