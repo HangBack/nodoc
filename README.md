@@ -156,8 +156,29 @@ I am a body of text, a body of text...
 - 修改时间：%Y-%m-%d %H:%M:%S
 - 访问时间：%Y-%m-%d %H:%M:%S
 - 文档大小：158.00B
-- 文档内容：# 标题...(143字)...段正文……
+- 文档内容：# Ca...(107字)...xt...
 ```
+
+<details>
+<summary style="cursor: pointer;"><strong>Output in English</strong></summary>
+
+``` console
+> python example4.py
+# Caption A
+## Caption Aa
+I am a body of text, a body of text...
+# Caption B
+I am a body of text, a body of text...
+
+My document tree
+- Creation Time: %Y-%m-%d %H:%M:%S
+- Modification Time: %Y-%m-%d %H:%M:%S
+- Access Time: %Y-%m-%d %H:%M:%S
+- Document Size：158.00B
+- Document Content：# Ca...(107字)...xt...
+```
+
+</details>
 
 </details>
 
