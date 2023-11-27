@@ -62,7 +62,7 @@ class docNode(Node):
 
     @property
     def isText(self) -> bool:
-        "是否是标题节点"
+        "是否是正文节点"
         return self._isText
     
     @isText.setter
@@ -171,7 +171,7 @@ class docTree(Tree):
             if node.isText:
                 result += node.data['content'] + end
 
-                
+
             if node >> splitSign:
                 title = ''
                 
