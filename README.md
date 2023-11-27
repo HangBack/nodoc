@@ -84,7 +84,7 @@ titleNode = docNode(kind = 'title', content = '标题A')
 contextNode = docNode(content = '我是一段正文，一段正文……' * 256)
 contextNode.parent = titleNode
 myDocTree = docTree(titleNode, '我的文档树')
-myDocTree.update()
+myDocTree.toMarkdown()
 print(myDocTree)
 ```
 
@@ -120,7 +120,7 @@ contextNodeB.parent = titleNodeB
 titleNodeA.parent = rootNode
 titleNodeB.parent = rootNode
 myDocTree = docTree(rootNode, '我的文档树')
-myDocTree.update()
+myDocTree.toMarkdown()
 print(myDocTree.document, myDocTree)
 ```
 
