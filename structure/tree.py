@@ -9,7 +9,7 @@ class Node:
         """
         节点
         - 关键字参数:
-          - **data: dataArg, 节点保存的数据
+          - **data: Any, 节点保存的数据
         - 属性:
           - parent: Node, 该节点的父节点
           - left: Node, 该节点的左节点
@@ -45,8 +45,8 @@ class Node:
 
     @parent.setter
     def parent(self, node: 'Node'):
-        if not isinstance(node, Node):
-            raise TypeError(f'期望：Node，实际：{type(node)}')
+        if not isinstance(node, type(self)):
+            raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
     
         if self._parent:
             self._parent.children.remove(self)
@@ -64,8 +64,8 @@ class Node:
 
     @left.setter
     def left(self, node: 'Node'):
-        if not isinstance(node, Node):
-            raise TypeError(f'期望：Node，实际：{type(node)}')
+        if not isinstance(node, type(self)):
+            raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
 
         self._left = node
         if self._left.right is not self: # 同时防止递归过深
@@ -81,8 +81,8 @@ class Node:
 
     @right.setter
     def right(self, node: 'Node'):
-        if not isinstance(node, Node):
-            raise TypeError(f'期望：Node，实际：{type(node)}')
+        if not isinstance(node, type(self)):
+            raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
 
         self._right = node
         if self._right.left is not self: # 同时防止递归过深

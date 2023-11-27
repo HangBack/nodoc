@@ -1,23 +1,76 @@
-from typing import Any, Callable, TypedDict, Unpack
+import time
+from typing import Any, Callable, TypedDict, Unpack, Literal
 from .tree import Node, Tree
+import sys
+
+
+splitSign = Literal['\\']
 
 class metadata(TypedDict):
     create_time: str # 数据的创建时间
     modify_time: str # 数据的修改时间
     visit_time: str  # 数据的访问时间
+    size: int # 数据大小
 
 class dataArg(TypedDict):
-    head: str # 数据的标头（标题等）
+    head: str | None # 数据的标头
+    kind: Literal['title', 'table', 'image', 'text']
+    content: str
+
+
+class docArg(TypedDict):
+    head: str # 文档的标头
     metadata: metadata # 元数据
-    content: Any # 数据的内容
 
 class docNode(Node):
     
     def __init__(self, **data: Unpack[dataArg]) -> None:
+        """
+        文档节点
+        - 构造
+          - **data: dataArg, 文档节点具有的属性
+            - kind: Literal['title', 'table', 'image', 'text'], 节点的种类，有三种字面量，默认值为'text'
+            - content: str, 节点的文本内容
+        - 属性\n
+            继承自Node节点
+        """
+        # 默认值预处理
+        data.setdefault('kind', 'text')
+
         super().__init__(**data)
-        self._isTitle: bool = False # 是否是标题
-        self._isTable: bool = False # 是否是表格
-        self._isImage: bool = False # 是否是图像
+        self.data: dataArg
+        self._isTitle: bool = data['kind'] == 'title' # 是否是标题
+        self._isTable: bool = data['kind'] == 'table' # 是否是表格
+        self._isImage: bool = data['kind'] == 'image' # 是否是图像
+        self._isText: bool = data['kind'] == 'text' # 是否是图像
+
+    @property
+    def parent(self):
+        return super().parent
+
+    @parent.setter
+    def parent(self, node: 'docNode'):
+        if not isinstance(node, type(self)):
+            raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
+    
+        if self._parent:
+            self._parent.children.remove(self)
+
+        self._parent = node
+        self._parent.children.append(self)
+
+
+    @property
+    def isText(self) -> bool:
+        "是否是标题节点"
+        return self._isText
+    
+    @isText.setter
+    def isText(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError(f'期望：bool，实际：{type(value)}')
+        
+        self._isText = value
 
 
     @property
@@ -58,9 +111,10 @@ class docNode(Node):
         
         self._isImage = value
 
+
 class docTree(Tree):
 
-    def __init__(self, root: docNode, name: str = '文档树') -> None:
+    def __init__(self, root: docNode, name: str = '文档树', **data: Unpack[docArg]) -> None:
         """
         文档树
         - 参数
@@ -69,7 +123,72 @@ class docTree(Tree):
          - 可选
           - name: str, 文档树的名称，用于查询。
         """
+        data.setdefault('head', None)
+        data.setdefault('metadata', {
+            'create_time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+            'modify_time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),
+            'visit_time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+        })
+
         if not isinstance(root, docNode):
             raise TypeError(f'期望：docNode，实际：{type(root)}')
         
         super().__init__(root, name)
+        self.data = data
+
+    def update(self):
+        self.toMarkdown()
+        self.data['metadata'].setdefault('size', sys.getsizeof(self.document))
+
+    def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
+        return super().DFT(node, callback)
+    
+    def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
+        return super().BFT(callback)
+    
+    
+    def toMarkdown(self):
+        result = ''
+        title = ''
+        end = '\n'
+        for node in self.DFT():
+            if node is splitSign:
+                title = ''
+                continue
+
+            if node.isTitle:
+                title += '#'
+                result += title + ' ' + node.data['content'] + end
+
+            if node.isImage:
+                url = node.data['content']
+                result += f'![{node.data["head"]}]({url})' + end
+
+            if node.isTable:
+                result += node.data['content'] + end
+
+            if node.isText:
+                result += node.data['content'] + end
+        self.document = result
+
+    def __str__(self):
+        document = None
+        if hasattr(self, 'document'):
+            if len(self.document) <= 12:
+                document = self.document.replace('\n', '')
+            else:
+                document = self.document[0:5].replace('\n', '') + f'...({len(self.document) - 10}字)...' + self.document[-6:-1].replace('\n', '')
+        size: list[int | list] = [self.data['metadata']['size'], ['B', 'KB', 'MB', 'GB', 'TB', 'PB']]
+        while size[0] > 1024 and len(size[1]) > 1:
+            size[0] /= 1024
+            size[1].pop(0)
+            
+        result = f"""
+{self.name}
+- 创建时间：{self.data['metadata']['create_time']}
+- 修改时间：{self.data['metadata']['modify_time']}
+- 访问时间：{self.data['metadata']['visit_time']}
+- 文档大小：{size[0]:.2f}{size[1][0]}
+- 文档内容：{document}
+"""
+        return result
