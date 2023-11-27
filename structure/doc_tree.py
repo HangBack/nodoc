@@ -6,6 +6,15 @@ import sys
 
 splitSign = Literal['\\']
 
+
+def auto_update(func: Callable):
+    def wrapper(cls: 'docTree', *args, **kwargs):
+        result = func(cls, *args, **kwargs)
+        cls.update()
+        return result
+    return wrapper
+
+
 class metadata(TypedDict):
     create_time: str # 数据的创建时间
     modify_time: str # 数据的修改时间
@@ -141,8 +150,8 @@ class docTree(Tree):
         self.data = data
 
     def update(self):
-        self.toMarkdown()
         self.data['metadata'].setdefault('size', sys.getsizeof(self.document))
+
 
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         return super().DFT(node, callback)
@@ -150,7 +159,7 @@ class docTree(Tree):
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         return super().BFT(callback)
     
-    
+    @auto_update
     def toMarkdown(self):
         result = ''
         title = ''
@@ -175,6 +184,11 @@ class docTree(Tree):
             if node >> splitSign:
                 title = ''
                 
+        self.document = result
+    
+    @auto_update
+    def toHtml(self):
+        result = ''
         self.document = result
 
     def __str__(self):
