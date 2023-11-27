@@ -111,6 +111,10 @@ class docNode(Node):
         
         self._isImage = value
 
+    
+    def __rshift__(self, other):
+        if other is splitSign:
+            return len(self.children) == 0
 
 class docTree(Tree):
 
@@ -152,9 +156,6 @@ class docTree(Tree):
         title = ''
         end = '\n'
         for node in self.DFT():
-            if node is splitSign:
-                title = ''
-                continue
 
             if node.isTitle:
                 title += '#'
@@ -169,6 +170,11 @@ class docTree(Tree):
 
             if node.isText:
                 result += node.data['content'] + end
+
+                
+            if node >> splitSign:
+                title = ''
+                
         self.document = result
 
     def __str__(self):
@@ -177,7 +183,11 @@ class docTree(Tree):
             if len(self.document) <= 12:
                 document = self.document.replace('\n', '')
             else:
-                document = self.document[0:5].replace('\n', '') + f'...({len(self.document) - 10}字)...' + self.document[-6:-1].replace('\n', '')
+                prefix = self.document[0:5].replace('\n', '')
+                char_count = f'...({len(self.document) - 10}字)...'
+                suffix = self.document[-6:-1].replace('\n', '')
+                document = prefix + char_count + suffix
+                
         size: list[int | list] = [self.data['metadata']['size'], ['B', 'KB', 'MB', 'GB', 'TB', 'PB']]
         while size[0] > 1024 and len(size[1]) > 1:
             size[0] /= 1024
