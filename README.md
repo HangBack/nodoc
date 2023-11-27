@@ -41,7 +41,7 @@ print(myNode.parent.children[0].data['content'])
 
 ``` console
 > python example.py
-> 我是一个节点
+我是一个节点
 ```
 ## 基本树
 &emsp;&emsp;然而，在Nodoc中，我们并不单独的去将节点放到内存当中，而使用一种基本容器“基本树”去存储所有的节点。<br>
@@ -60,10 +60,10 @@ print(*[i.data for i in myTree.BFT()], sep='\n') # 通过树的层次遍历方�
 
 ``` console
 > python example2.py
-> 我是一个节点
-> 我的树 根节点
-> {"content": "根节点"}
-> {"content": "我是一个节点"}
+我是一个节点
+我的树 根节点
+{'content': '根节点'}
+{'content': '我是一个节点'}
 ```
 
 ## 文档节点与文档树
