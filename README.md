@@ -229,5 +229,44 @@ print(x, y)
 Ketty Title Fox Title
 ```
 
+&emsp;&emsp;We export the database through the vectorDB instance 'export' method, and import a file with the nodocdb extension from disk through vectorDB's static method 'load' when importing<br>
+Like the just example.
+
+**Example**
+
+```py
+# example6.py
+from example5 import db
+db.export('mydatabase', './')
+
+```
+
+**Output**
+
+``` console
+> python example6.py
+> 
+```
+
+Then we load the database.
+
+**Example**
+
+```py
+# example7.py
+from nodoc import vectorDB
+db = vectorDB.load('./mydatabase.nodocdb')
+x = db.query('Fox').parent.data['content']
+print(x)
+
+```
+
+**Output**
+
+``` console
+> python example7.py
+Fox Title
+```
+
 # Contributors
 - **HangBack**: Build the entire project.
