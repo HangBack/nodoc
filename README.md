@@ -24,6 +24,10 @@ Activate.
 
 `conda activate {env_name}`<br>
 
+Install "requirements.txt".
+
+`pip install -r requirements.txt`<br>
+
 # Quick Start
 ## Base node
 &emsp;&emsp;In Nodoc, we prefer operating on node attributes using a chained method invocation. The following example illustrates how we create a basic node.
