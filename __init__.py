@@ -7,5 +7,6 @@ __all__ = [
     'docNode',
     'docTree',
     'Node',
-    'Tree'
+    'Tree',
+    'vectorDB'
 ]
