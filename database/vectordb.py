@@ -20,7 +20,7 @@ class vectorDB(dataBase):
 
     def __init__(self, forest_or_path: _Forest | str = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./') -> None:
         if isinstance(forest_or_path, str):
-            self.load()
+            self.load(forest_or_path)
             return None
         forest = forest_or_path
         match mode:
