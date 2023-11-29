@@ -165,7 +165,7 @@ titleNodeA.parent = rootNode
 titleNodeB.parent = rootNode
 myDocTree = docTree(rootNode, '我的文档树')
 
-from nodoc.database.vectordb import vectorDB
+from nodoc import vectorDB
 
 db = vectorDB([myDocTree]) # 创建数据库
 
@@ -189,6 +189,45 @@ print(x, y)
 ``` console
 > python example5.py
 小猫标题 狐狸标题
+```
+
+&emsp;&emsp;我们通过vectorDB实例export方法将数据库导出，导入时通过vectorDB的静态方法load从磁盘中导入扩展名为nodocdb的文件<br>
+例如刚刚的示例中
+
+**示例程序**
+
+```py
+# example6.py
+from example5 import db
+db.export('mydatabase', './')
+
+```
+
+**输出**
+
+``` console
+> python example6.py
+> 
+```
+
+接下来我们导入这个数据库
+
+**示例程序**
+
+```py
+# example7.py
+from nodoc import vectorDB
+db = vectorDB.load('./mydatabase.nodocdb')
+x = db.query('狐狸').parent.data['content']
+print(x)
+
+```
+
+**输出**
+
+``` console
+> python example7.py
+狐狸标题
 ```
 
 # 贡献
