@@ -1,9 +1,12 @@
 from collections import deque
-from typing import Any, Callable
+from typing import Any, Callable, TypeAlias
+import abc
 
-type __Nodes = list['Node']
 
-class Node:
+__Nodes: TypeAlias = list['Node']
+
+class Node(metaclass=abc.ABCMeta):
+
 
     def __init__(self, **data) -> None:
         """
@@ -17,13 +20,13 @@ class Node:
           - children: list[Node], 该节点的所有子节点
           - visited: bool, 该节点是否被访问
         """
-        self._parent: Node = None       # 父节点
-        self._left: Node = None         # 左节点
-        self._right: Node = None        # 右节点
-        self._children: __Nodes = []    # 子节点列表
-        self._data = data               # 节点数据
-        self._visited: bool = False     # 是否被访问
-        self._count: int = 1            # 包括自己在内的节点数量（包含深度）
+        self._parent: Node = None          # 父节点
+        self._left: Node = None            # 左节点
+        self._right: Node = None           # 右节点
+        self._children: __Nodes = []       # 子节点列表
+        self._data = data                  # 节点数据
+        self._visited: bool = False        # 是否被访问
+        self._count: int = 1               # 包括自己在内的节点数量（包含深度）
 
     @property
     def visited(self) -> bool:
@@ -47,7 +50,7 @@ class Node:
     def parent(self, node: 'Node'):
         if not isinstance(node, type(self)):
             raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
-    
+
         if self._parent:
             self._parent.children.remove(self)
 
@@ -68,7 +71,7 @@ class Node:
             raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
 
         self._left = node
-        if self._left.right is not self: # 同时防止递归过深
+        if self._left.right is not self:  # 同时防止递归过深
             self._left.right = self
 
     @property
@@ -85,7 +88,7 @@ class Node:
             raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
 
         self._right = node
-        if self._right.left is not self: # 同时防止递归过深
+        if self._right.left is not self:  # 同时防止递归过深
             self._right.left = self
 
     @property
@@ -121,7 +124,7 @@ class Node:
         return type(self._data)
 
 
-class Tree:
+class Tree(metaclass=abc.ABCMeta):
 
     def __init__(self, root: Node, name: str = '无名树') -> None:
         """
@@ -158,19 +161,20 @@ class Tree:
         queue = deque([self.root])
         while queue:
             current_node = queue.popleft()
-            
+
             if callback(current_node):
                 return current_node  # 第一个符合条件的节点
-            
+
             visited.add(current_node)
 
-            queue.extend(child 
-                         for child in current_node.children 
-                         if child not in visited 
-                            and 
-                            child not in queue)
+            queue.extend(child
+                         for child in current_node.children
+                         if child not in visited
+                         and
+                         child not in queue)
         return None  # 没有任何满足条件的节点
 
+    @abc.abstractmethod
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[Node] | None:
         """
         广度优先遍历（层次遍历）
@@ -184,14 +188,14 @@ class Tree:
 
             if callback(current_node):
                 result.append(current_node)  # 追加一个符合条件的节点
-            
+
             visited.add(current_node)
 
-            queue.extend(child 
-                         for child in current_node.children 
-                         if child not in visited 
-                            and 
-                            child not in queue)
+            queue.extend(child
+                         for child in current_node.children
+                         if child not in visited
+                         and
+                         child not in queue)
 
         return result
 
@@ -214,7 +218,7 @@ class Tree:
 
         if callback(node):
             return node  # 找到符合条件的节点
-        
+
         node.visited = True
         for child in node.children:
             if not child.visited:
@@ -225,6 +229,7 @@ class Tree:
 
         return None  # 在当前子树未找到符合条件的节点
 
+    @abc.abstractmethod
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[Node]:
         """
         深度优先遍历
@@ -239,7 +244,7 @@ class Tree:
 
         if callback(node):
             result.append(node)  # 找到符合条件的节点
-        
+
         node.visited = True
         for child in node.children:
             if not child.visited:

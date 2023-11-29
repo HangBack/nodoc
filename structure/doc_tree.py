@@ -1,5 +1,6 @@
 import time
 from typing import Any, Callable, TypedDict, Unpack, Literal
+# from typing import override
 from .tree import Node, Tree
 import sys
 
@@ -51,7 +52,7 @@ class docNode(Node):
         self._isTitle: bool = data['kind'] == 'title' # 是否是标题
         self._isTable: bool = data['kind'] == 'table' # 是否是表格
         self._isImage: bool = data['kind'] == 'image' # 是否是图像
-        self._isText: bool = data['kind'] == 'text' # 是否是图像
+        self._isText: bool = data['kind'] == 'text'   # 是否是图像
 
     @property
     def parent(self):
@@ -152,10 +153,11 @@ class docTree(Tree):
     def update(self):
         self.data['metadata'].setdefault('size', sys.getsizeof(self.document))
 
-
+    # @override
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         return super().DFT(node, callback)
     
+    # @override
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         return super().BFT(callback)
     
