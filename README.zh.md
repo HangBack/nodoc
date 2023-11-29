@@ -146,5 +146,50 @@ print(myDocTree.document, myDocTree)
 
 </details>
 
+## 向量数据库
+&emsp;&emsp;既然我们已经可以将文档节点化了，那我们有没有什么好的方式去将它们存储在内存空间中呢。Nodoc提供了向量数据库，方便了我们对节点内容的模糊查询。<br>
+**示例程序**
+
+``` py
+# example5.py
+from nodoc import docNode, docTree
+
+rootNode = docNode(kind='text', content='')
+titleNodeA = docNode(kind = 'title', content = '小狗标题')
+titleNodeB = docNode(kind = 'title', content = '小猫标题')
+contextNodeA = docNode(content = '我是一只小狗')
+contextNodeB = docNode(content = '我是一只小猫')
+contextNodeA.parent = titleNodeA
+contextNodeB.parent = titleNodeB
+titleNodeA.parent = rootNode
+titleNodeB.parent = rootNode
+myDocTree = docTree(rootNode, '我的文档树')
+
+from nodoc.database.vectordb import vectorDB
+
+db = vectorDB([myDocTree]) # 创建数据库
+
+
+
+x = db.query('小猫').parent.data['content'] # 查询含有“小猫”的节点的标题
+
+newNode = docNode(content = '我是一只狐狸')
+newTitle = docNode(kind = 'title', content = '狐狸标题')
+newNode.parent = newTitle
+
+db.insert(1, newNode) # 增加一个节点，该节点的标题是“狐狸标题”
+
+
+y = db.query('狐狸').parent.data['content'] # 查询含有“狐狸”的节点的标题
+print(x, y)
+```
+
+**输出**
+
+``` console
+> python example5.py
+小猫标题 狐狸标题
+```
+
 # 贡献
 - **HangBack**: 构建整个项目

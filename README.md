@@ -184,5 +184,50 @@ My document tree
 
 </details>
 
+## Vector Database
+&emsp;&emsp;Now that we can node documents, is there a good way to store them in memory? Nodoc provides a vector database that facilitates our fuzzy queries of node content.<br>
+**Example**
+
+``` py
+# example5.py
+from nodoc import docNode, docTree
+
+rootNode = docNode(kind='text', content='')
+titleNodeA = docNode(kind = 'title', content = 'Puppy Title')
+titleNodeB = docNode(kind = 'title', content = 'Ketty Title')
+contextNodeA = docNode(content = "I'm a puppy.")
+contextNodeB = docNode(content = "I'm a ketty.")
+contextNodeA.parent = titleNodeA
+contextNodeB.parent = titleNodeB
+titleNodeA.parent = rootNode
+titleNodeB.parent = rootNode
+myDocTree = docTree(rootNode, 'My document tree')
+
+from nodoc.database.vectordb import vectorDB
+
+db = vectorDB([myDocTree]) # Set up the database
+
+
+
+x = db.query('Ketty').parent.data['content'] # Query the node contains "Ketty" and out its title
+
+newNode = docNode(content = "I'm a fox.")
+newTitle = docNode(kind = 'title', content = 'Fox Title')
+newNode.parent = newTitle
+
+db.insert(1, newNode) # Add one node, the node title is "Fox Title"
+
+
+y = db.query('Fox').parent.data['content'] # Query the node contains "Fox" and out its title
+print(x, y)
+```
+
+**Output**
+
+``` console
+> python example5.py
+Ketty Title Fox Title
+```
+
 # Contributors
 - **HangBack**: Build the entire project.
