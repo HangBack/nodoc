@@ -10,15 +10,15 @@ Nodoc: Effortlessly and Efficiently Manipulating Document Data
 &emsp;&emsp;This tool can transform many kinds of documents to node, then we can operate those documents more easily. Node operation is also a common way to classify the data in some types of documents, when we united the structure of them, we'll get a more flexible way to manipulate the documents.
 
 # Installation
-This project is developed using Python 3.12.<br>
+This project is developed using Python 3.11.<br>
 Use clone command.
 
 `git clone https://github.com/HangBack/nodoc.git`
 
-Setting up a Conda environment with Python 3.12 using the command.
+Setting up a Conda environment with Python 3.11 using the command.
 
 
-`conda create -n {env_name} python==3.12`
+`conda create -n {env_name} python==3.11`
 
 Activate.
 
