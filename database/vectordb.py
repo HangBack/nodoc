@@ -1,8 +1,9 @@
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, Self
 from .database import dataBase
 from nodoc.const import Embedding
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import os
 
 
 def __import():
@@ -18,11 +19,8 @@ _Forest: TypeAlias = list['docTree']
 
 class vectorDB(dataBase):
 
-    def __init__(self, forest_or_path: _Forest | str = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./') -> None:
-        if isinstance(forest_or_path, str):
-            self.load(forest_or_path)
-            return None
-        forest = forest_or_path
+    def __init__(self, forest: _Forest = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./') -> None:
+        super().__init__()
         match mode:
             case 'low':
                 model = 'BAAI/bge-small-zh'
@@ -52,9 +50,10 @@ class vectorDB(dataBase):
 
     def export(self, name: str, directory: str = './'):
         return super().export(name, directory)
+    
 
-    def load(self, name: str, directory: str = './'):
-        return super().load(name, directory)
+    def load(path: str) -> Self:
+        return dataBase.load(path)
 
     @property
     def data(self):
