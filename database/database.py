@@ -17,6 +17,7 @@ class dataBase(metaclass=abc.ABCMeta):
 
     def __init__(self) -> None:
         self._data: _Nodes = []
+        self.__path: str = ""
 
     @abc.abstractmethod
     def export(self, name: str, directory: str = './'):
@@ -32,6 +33,17 @@ class dataBase(metaclass=abc.ABCMeta):
     def load(path: str):
         with open(path, 'rb+') as file:
             return pickle.load(file)
+
+    @abc.abstractmethod
+    def save(self):
+        if self.__path == "":
+            raise AttributeError("数据库从未存储至磁盘。")
+        path = os.path.abspath(self.__path)
+        path = os.path.splitdrive(path)
+        directory = path[0]
+        file = path[1]
+        name = os.path.splitext(file)[0]
+        self.export(name, directory)
 
     @abc.abstractproperty
     @property
