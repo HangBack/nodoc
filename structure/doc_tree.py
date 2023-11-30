@@ -1,5 +1,5 @@
 import time
-from typing import Any, Callable, TypedDict, Unpack, Literal
+from typing import Any, Callable, Self, TypedDict, Unpack, Literal
 # from typing import override
 from .tree import Node, Tree
 import sys
@@ -55,7 +55,7 @@ class docNode(Node):
         self._isText: bool = data['kind'] == 'text'   # 是否是图像
 
     @property
-    def parent(self):
+    def parent(self) -> Self:
         return super().parent
 
     @parent.setter
