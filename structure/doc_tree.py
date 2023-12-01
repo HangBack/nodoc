@@ -53,6 +53,18 @@ class docNode(Node):
         self._isTable: bool = data['kind'] == 'table' # 是否是表格
         self._isImage: bool = data['kind'] == 'image' # 是否是图像
         self._isText: bool = data['kind'] == 'text'   # 是否是图像
+        self.__tree: 'docTree'
+
+    def bind_tree(self, tree: 'docTree'):
+        self.__tree = tree
+
+    @property
+    def tree(self) -> 'docTree':
+        return self.__tree
+    
+    @property
+    def children(self) -> list[Self]:
+        return super().children
 
     @property
     def parent(self) -> Self:
