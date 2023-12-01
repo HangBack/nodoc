@@ -1,4 +1,7 @@
-from typing import Any, Literal, TypeAlias, Self, Callable
+import re
+from typing import Literal, TypeAlias, Self, Union
+
+import torch
 from .database import dataBase
 from nodoc.const import Embedding
 from sentence_transformers import SentenceTransformer
@@ -26,15 +29,16 @@ class vectorDB(dataBase):
                 model = 'BAAI/bge-small-zh'
             case _:
                 model = 'BAAI/bge-large-zh-v1.5'
-        self.model = SentenceTransformer(model, cache_folder=cache_folder)
+        device = 'cuda' if torch.cuda.is_available() else None
+        self.model = SentenceTransformer(
+            model, cache_folder=cache_folder, device=device)
         self.ebmapping: _docNodes = [
             node for tree in forest for node in tree.DFT()]
-        
+
         self.embeddings: _Embeddings = self.model.encode([
             node.data['content']
             for node in self.ebmapping
         ], normalize_embeddings=True)
-        self.__path: str = ""
 
     def insert(self, index: int, node: 'docNode'):
         self.ebmapping.insert(index, node)
@@ -44,52 +48,69 @@ class vectorDB(dataBase):
             axis=0
         )
 
-    def query(self, text: str, threshold: float = 0.5) -> 'docNode':
+    def query(self, text: str, count: int = 1, threshold: float = 0.5) -> Union['docNode', list['docNode']]:
         """
         查询节点
         - text: str, 输入查询文本，将根据该文本返回最相似内容的节点。
         - 可选
           - threshold: float, 相似阈值，小于该值结果将被抛弃，默认为0.5。
         """
-        text = self.model.encode(text, normalize_embeddings=True)
-        text_vector = np.array([text])
-        similarity = self.embeddings @ text_vector.T
-        index = similarity.argmax()
+        maintain_text = self.__find_chinese(text)
+        if maintain_text == '':
+            return None
+        final_text = self.model.encode(
+            maintain_text, normalize_embeddings=True)
+        text_vector = np.array([final_text])
+        similarity = (self.embeddings @ text_vector.T).flatten()
+        indexs = torch.from_numpy(similarity).topk(count).indices
+        indexs = list(indexs)
         _max = similarity.max()
         if _max < threshold:
-            None
-        return self.ebmapping[index]
-    
+            return None
+        for position, index in enumerate(indexs):
+            if similarity[index] < threshold:
+                del indexs[position]
+
+        nodes = []
+        for index in indexs:
+            nodes.append(self.ebmapping[index])
+        if len(nodes) == 1:
+            return nodes[0]
+        return nodes
+
     def __query(self, text: str) -> int:
         text = self.model.encode(text, normalize_embeddings=True)
         text_vector = np.array([text])
         index = (self.embeddings @ text_vector.T).argmax()
         return index
 
-    
-    def delete(self, text_or_index: str | int, mode: Literal['force', 'default'] = 'default') -> Self:
+    def __find_chinese(self, text: str):
+        pattern = re.compile(r'[^\u4e00-\u9fa50-9]+')
+        chinese = re.sub(pattern, '', text)
+        return chinese
+
+    def delete(self, text_or_index: str | int) -> Self:
         """
         *警告：不推荐使用该方法删除节点，其具有不可预见性。
         返回一个即将被删除的节点
         - text_or_index: str | int, 传入一个文本或索引，传入文本时将找到最匹配的节点。
-        - mode: Literal['force', 'default'], force字面量将强制删除而无需验证，default即默认模式是需要验证的。
         """
-        
+
         if isinstance(text_or_index, int):
             index = text_or_index
         elif isinstance(text_or_index, str):
             index = self.__query(text_or_index)
         else:
             raise ValueError('只能接收索引或字符串。')
-        
+
         self.embeddings = np.delete(self.embeddings, index, axis=0)
         del self.ebmapping[index]
-    
+
         return self.ebmapping[index]
 
     def export(self, name: str, directory: str = './'):
         return super().export(name, directory)
-    
+
     def save(self):
         return super().save()
 
