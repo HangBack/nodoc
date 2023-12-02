@@ -29,6 +29,10 @@ class Document(metaclass=abc.ABCMeta):
     @property
     def data(self) -> Data:
         return self.__data
+    
+    @abc.abstractmethod
+    def __document__(self):
+        ...
 
     def __lshift__(self, other):
         return self.__data << other

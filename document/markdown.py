@@ -59,3 +59,5 @@ class Markdown(Document):
         with open(directory + '/' + name + '.md', 'w+', encoding='utf-8') as file:
             file.write(self.__str__())
             
+    def __document__(self):
+        ...
