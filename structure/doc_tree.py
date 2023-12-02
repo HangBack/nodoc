@@ -175,30 +175,36 @@ class docTree(Tree):
     
     @auto_update
     def toMarkdown(self):
-        result = ''
-        title = ''
-        end = '\n'
+        from nodoc import Markdown
+        document = Markdown()
+        title_level = 1
         for node in self.DFT():
-
+            content = node.data['content']
             if node.isTitle:
-                title += '#'
-                result += title + ' ' + node.data['content'] + end
+                document.add_title(content, title_level)
 
             if node.isImage:
-                url = node.data['content']
-                result += f'![{node.data["head"]}]({url})' + end
+                continue
+                document.add_image(
+                    url = content['url']
+                )
 
             if node.isTable:
-                result += node.data['content'] + end
+                continue
+                document.add_table(
+                    head = content['head'],
+                    lines = content['lines']
+                )
 
             if node.isText:
-                result += node.data['content'] + end
+                document.add_text(content)
 
-
+            title_level += 1
             if node >> splitSign:
-                title = ''
+                title_level = 1
                 
-        self.document = result
+        self.document = document
+        return document
     
     @auto_update
     def toHtml(self):
