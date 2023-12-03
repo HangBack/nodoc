@@ -1,13 +1,13 @@
 English | [**中文**](README.zh.md)
 
-Nodoc: Effortlessly and Efficiently Manipulating Document Data
+Nodoc: Layer-by-layer manipulation of document data with ease and efficiency.
 ============
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Metrics](https://img.shields.io/badge/build-develop-yellow)
 
 # Introduction
 
-&emsp;&emsp;This tool can transform many kinds of documents to node, then we can operate those documents more easily. Node operation is also a common way to classify the data in some types of documents, when we united the structure of them, we'll get a more flexible way to manipulate the documents.
+&emsp;&emsp;Nodoc is a powerful document processing tool that implements the document layer by nodeding various document data tiered storage and efficient operations. This hierarchical indexed storage method not only simplifies document management, but also enables users to: Easier data mining and cross-document operations.
 
 # Installation
 This project is developed using Python 3.11.<br>
@@ -57,7 +57,7 @@ print(myNode.parent.children[0].data['content'])
 I'm a node.
 ```
 ## Base Tree
-&emsp;&emsp;However, in Nodoc, we don't individually place nodes into memory; instead, we use a fundamental container, the "basic tree," to store all nodes.<br>
+&emsp;&emsp;However, in Nodoc, we don't individually place nodes into memory; instead, we use a fundamental container, the "base tree" to store all nodes.<br>
 **Example**
 
 ``` py

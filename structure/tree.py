@@ -128,8 +128,9 @@ class Tree(metaclass=abc.ABCMeta):
 
     def __init__(self, root: Node, name: str = '无名树') -> None:
         """
-        - root: `Node`, 传入任意一个节点作为该树的根节点。
-        - name: `str`, 树的名字，用于查询。
+        实例化一个基本树对象。
+        - root: Node, 树的根节点。
+        - name: str, 树的名字，用于查询。
         """
         self.name: str = name
         self.root: Node = root
@@ -154,8 +155,8 @@ class Tree(metaclass=abc.ABCMeta):
 
     def BFS(self, callback: Callable[[Node], bool] = lambda node: True) -> Node | None:
         """
-        广度优先搜索（层次搜索）
-        - callback: `Callable`, 用于判断node是否符合指定条件
+        广度优先搜索（层次搜索）。
+        - callback: Callable, 用于判断node是否符合指定条件。
         """
         visited = set()
         queue = deque([self.root])
@@ -178,7 +179,7 @@ class Tree(metaclass=abc.ABCMeta):
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[Node] | None:
         """
         广度优先遍历（层次遍历）
-        - callback: `Callable`, 用于判断node是否符合指定条件
+        - callback: Callable, 用于判断node是否符合指定条件。
         """
         visited = set()
         queue = deque([self.root])
@@ -208,9 +209,9 @@ class Tree(metaclass=abc.ABCMeta):
 
     def DFS(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> Node | None:
         """
-        深度优先搜索
-        - node: `Node`, 传入的节点，默认为根节点
-        - callback: `Callable`, 用于判断node是否符合指定条件
+        深度优先搜索。
+        - node: Node, 起点节点，默认为根节点。
+        - callback: Callable, 用于判断node是否符合指定条件。
         """
         result = None
         if node is None:
@@ -232,9 +233,9 @@ class Tree(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[Node]:
         """
-        深度优先遍历
-        - node: `Node`, 传入的节点，默认为根节点
-        - callback: `Callable`, 用于判断node是否符合指定条件
+        深度优先遍历。
+        - node: Node, 起点节点，默认为根节点。
+        - callback: Callable, 用于判断node是否符合指定条件。
         """
         result = None
         if node is None:

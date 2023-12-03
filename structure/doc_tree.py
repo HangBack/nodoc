@@ -37,7 +37,6 @@ class docNode(Node):
     def __init__(self, **data: Unpack[dataArg]) -> None:
         """
         文档节点
-        - 构造
           - **data: dataArg, 文档节点具有的属性
             - kind: Literal['title', 'table', 'image', 'text'], 节点的种类，有三种字面量，默认值为'text'
             - content: str, 节点的文本内容
@@ -52,10 +51,14 @@ class docNode(Node):
         self._isTitle: bool = data['kind'] == 'title' # 是否是标题
         self._isTable: bool = data['kind'] == 'table' # 是否是表格
         self._isImage: bool = data['kind'] == 'image' # 是否是图像
-        self._isText: bool = data['kind'] == 'text'   # 是否是图像
+        self._isText: bool = data['kind'] == 'text'   # 是否是正文
         self.__tree: 'docTree'
 
     def bind_tree(self, tree: 'docTree'):
+        """
+        绑定从属树。
+        - tree: docTree, 绑定一个文档树。
+        """
         self.__tree = tree
 
     @property
@@ -142,12 +145,9 @@ class docTree(Tree):
 
     def __init__(self, root: docNode, name: str = '文档树', **data: Unpack[docArg]) -> None:
         """
-        文档树
-        - 参数
-         - 必选
-          - root: docNode, 传入一个文档节点作为根节点。
-         - 可选
-          - name: str, 文档树的名称，用于查询。
+        实例化一个文档树对象。
+        - root: docNode, 文档树的根节点。
+        - name: str, 文档树的名称，用于查询。
         """
         data.setdefault('head', None)
         data.setdefault('metadata', {

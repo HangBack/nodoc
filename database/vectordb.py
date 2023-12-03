@@ -23,6 +23,12 @@ _Forest: TypeAlias = list['docTree']
 class vectorDB(dataBase):
 
     def __init__(self, forest: _Forest = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./') -> None:
+        """
+        实例化一个向量数据库对象。
+        - forest: _Forest, 树列表，作为数据库的查询树。
+        - mode: Literal['exact', 'low'], `exact`为准确模式，`low`为低耗模式，决定数据库使用的Embedding模型。
+        - cache_folder: str = './', 数据库模型的缓存路径。
+        """
         super().__init__()
         match mode:
             case 'low':
@@ -32,13 +38,17 @@ class vectorDB(dataBase):
         device = 'cuda' if torch.cuda.is_available() else None
         self.model = SentenceTransformer(
             model, cache_folder=cache_folder, device=device)
+        "该数据库使用的模型（该模型必须是或继承自SentenceTransformer）。"
+
         self.ebmapping: _docNodes = [
             node for tree in forest for node in tree.DFT()]
+        "Eb节点映射，包含了数据库中所有的节点，可通过索引的方式直接顺序访问这些节点（不推荐）。"
 
         self.embeddings: _Embeddings = self.model.encode([
             node.data['content']
             for node in self.ebmapping
         ], normalize_embeddings=True)
+        "文本嵌入查询矩阵，用于计算查询相似度，不推荐读取。"
 
     def insert(self, index: int, node: 'docNode'):
         self.ebmapping.insert(index, node)
@@ -50,11 +60,11 @@ class vectorDB(dataBase):
 
     def query(self, text: str, count: int = 1, threshold: float = 0.5) -> Union['docNode', list['docNode']]:
         """
-        查询节点
-        - text: str, 输入查询文本，将根据该文本返回最相似内容的节点。
-        - 可选
-          - threshold: float, 相似阈值，小于该值结果将被抛弃，默认为0.5。
-        """
+        从数据库中查询节点。
+        - text: str, 查询的文本，作为相似性判断的根据。
+        - count: int, 查询节点的数量。
+        - threshold: float = 0.5, 查询阈值，低于阈值将被抛弃。
+"""
         maintain_text = self.__find_chinese(text)
         if maintain_text == '':
             return None
@@ -91,9 +101,9 @@ class vectorDB(dataBase):
 
     def delete(self, text_or_index: str | int) -> Self:
         """
-        *警告：不推荐使用该方法删除节点，其具有不可预见性。
-        返回一个即将被删除的节点
-        - text_or_index: str | int, 传入一个文本或索引，传入文本时将找到最匹配的节点。
+        **警告**：不推荐使用该方法删除节点，其具有不可预见性。
+        删除节点，并返回被删除的节点。
+        - text_or_index: str | int, 为文本时，根据相似度删除节点，为索引时删除对应索引位置的节点。
         """
 
         if isinstance(text_or_index, int):
@@ -104,9 +114,10 @@ class vectorDB(dataBase):
             raise ValueError('只能接收索引或字符串。')
 
         self.embeddings = np.delete(self.embeddings, index, axis=0)
+        result = self.ebmapping[index]
         del self.ebmapping[index]
 
-        return self.ebmapping[index]
+        return result
 
     def export(self, name: str, directory: str = './'):
         return super().export(name, directory)
