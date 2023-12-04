@@ -1,7 +1,6 @@
 import time
 from typing import Any, Callable, Self, TypedDict, Unpack, Literal
-# from typing import override
-from .tree import Node, Tree
+from .tree import Node, Nodes, Tree
 import sys
 
 
@@ -17,23 +16,25 @@ def auto_update(func: Callable):
 
 
 class metadata(TypedDict):
-    create_time: str # 数据的创建时间
-    modify_time: str # 数据的修改时间
+    create_time: str  # 数据的创建时间
+    modify_time: str  # 数据的修改时间
     visit_time: str  # 数据的访问时间
-    size: int # 数据大小
+    size: int  # 数据大小
+
 
 class dataArg(TypedDict):
-    head: str | None # 数据的标头
+    head: str | None  # 数据的标头
     kind: Literal['title', 'table', 'image', 'text']
     content: str
 
 
 class docArg(TypedDict):
-    head: str # 文档的标头
-    metadata: metadata # 元数据
+    head: str  # 文档的标头
+    metadata: metadata  # 元数据
+
 
 class docNode(Node):
-    
+
     def __init__(self, **data: Unpack[dataArg]) -> None:
         """
         文档节点
@@ -44,102 +45,169 @@ class docNode(Node):
             继承自Node节点
         """
         # 默认值预处理
+        data.setdefault('head', None)
         data.setdefault('kind', 'text')
 
         super().__init__(**data)
         self.data: dataArg
-        self._isTitle: bool = data['kind'] == 'title' # 是否是标题
-        self._isTable: bool = data['kind'] == 'table' # 是否是表格
-        self._isImage: bool = data['kind'] == 'image' # 是否是图像
+        self._isTitle: bool = data['kind'] == 'title'  # 是否是标题
+        self._isTable: bool = data['kind'] == 'table'  # 是否是表格
+        self._isImage: bool = data['kind'] == 'image'  # 是否是图像
         self._isText: bool = data['kind'] == 'text'   # 是否是正文
-        self.__tree: 'docTree'
-
-    def bind_tree(self, tree: 'docTree'):
-        """
-        绑定从属树。
-        - tree: docTree, 绑定一个文档树。
-        """
-        self.__tree = tree
+        self._tree: docTree
+        self._parent: docNode
+        self._children: docNodes
+        self._right: docNode
+        self._left: docNode
 
     @property
     def tree(self) -> 'docTree':
-        return self.__tree
-    
-    @property
-    def children(self) -> list[Self]:
-        return super().children
+        return super().tree
+
+    @tree.setter
+    def tree(self, value: 'docTree'):
+        super(docNode, docNode).tree.__set__(self, value)
 
     @property
-    def parent(self) -> Self:
+    def children(self) -> 'docNodes':
+        return super().children
+
+    @children.setter
+    def children(self, value):
+        super(docNode, docNode).children.__set__(self, value)
+
+    @property
+    def parent(self) -> 'docNode':
         return super().parent
 
     @parent.setter
-    def parent(self, node: 'docNode'):
-        if not isinstance(node, type(self)):
-            raise TypeError(f'期望：{type(self)}，实际：{type(node)}')
-    
-        if self._parent:
-            self._parent.children.remove(self)
+    def parent(self, value: 'docNode'):
+        super(docNode, docNode).parent.__set__(self, value)
 
-        self._parent = node
-        self._parent.children.append(self)
+    @property
+    def left(self) -> 'docNode':
+        return super().left
 
+    @left.setter
+    def left(self, value: 'docNode'):
+        super(docNode, docNode).left.__set__(self, value)
+
+    @property
+    def right(self) -> 'docNode':
+        return super().right
+
+    @right.setter
+    def right(self, value: 'docNode'):
+        super(docNode, docNode).right.__set__(self, value)
 
     @property
     def isText(self) -> bool:
         "是否是正文节点"
         return self._isText
-    
+
     @isText.setter
     def isText(self, value: bool):
         if not isinstance(value, bool):
             raise TypeError(f'期望：bool，实际：{type(value)}')
-        
-        self._isText = value
 
+        self._isText = value
 
     @property
     def isTitle(self) -> bool:
         "是否是标题节点"
         return self._isTitle
-    
+
     @isTitle.setter
     def isTitle(self, value: bool):
         if not isinstance(value, bool):
             raise TypeError(f'期望：bool，实际：{type(value)}')
-        
-        self._isTitle = value
 
+        self._isTitle = value
 
     @property
     def isTable(self) -> bool:
         "是否是表格节点"
         return self._isTable
-    
+
     @isTable.setter
     def isTable(self, value: bool):
         if not isinstance(value, bool):
             raise TypeError(f'期望：bool，实际：{type(value)}')
-        
-        self._isTable = value
 
+        self._isTable = value
 
     @property
     def isImage(self) -> bool:
         "是否是图像节点"
         return self._isImage
-    
+
     @isImage.setter
     def isImage(self, value: bool):
         if not isinstance(value, bool):
             raise TypeError(f'期望：bool，实际：{type(value)}')
-        
+
         self._isImage = value
 
-    
-    def __rshift__(self, other):
-        if other is splitSign:
+    def __eq__(self, __value: object) -> bool:
+        if __value is splitSign:
             return len(self.children) == 0
+        return super().__eq__(__value)
+
+    def __rshift__(self, other):
+        result = super().__rshift__(other)
+        if result is None:
+            return None
+        return docNodes(result)
+
+    def __lshift__(self, other):
+        result = super().__lshift__(other)
+        if result is None:
+            return None
+        return docNodes(result)
+
+    def get_route(self, endpoint: 'docNode', condition: Callable[['docNode'], bool] = lambda node: True) -> 'docNodes':
+        """
+        获取子父节点的路由 -> 默认是从该节点到目标节点之间的所有标题节点（不包括该节点）。
+        - endpoint: Node，该节点的目标节点。
+        """
+        if condition is None:
+            def condition(node: docNode):
+                return node.isTitle
+        result = super().get_route(endpoint, condition)
+        if result is None:
+            return None
+        return docNodes(list(result))
+
+    def __matmul__(self, other):
+        result = super().__matmul__(other)
+        return result
+
+    def __str__(self):
+        return f"""
+标头：{self.data['head']}
+内容：{self.data['content']}
+类型：{self.data['kind']}
+路由：{self >> self.tree.root}
+"""
+
+
+class docNodes(Nodes):
+
+    def __init__(self, nodes: list[docNode]) -> None:
+        super().__init__(nodes)
+
+    def prepend(self, node: docNode):
+        return super().prepend(node)
+
+    def append(self, node: docNode):
+        return super().append(node)
+    
+    def remove(self, node: docNode):
+        return super().remove(node)
+
+    def __str__(self) -> str:
+        return "/".join([node.data['content'] for node in self.data])
+
 
 class docTree(Tree):
 
@@ -158,21 +226,24 @@ class docTree(Tree):
 
         if not isinstance(root, docNode):
             raise TypeError(f'期望：docNode，实际：{type(root)}')
-        
+
         super().__init__(root, name)
         self.data = data
+        self.root: docNode
 
     def update(self):
         self.data['metadata'].setdefault('size', sys.getsizeof(self.document))
 
     # @override
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
-        return super().DFT(node, callback)
-    
+        result = super().DFT(node, callback)
+        return docNodes(result)
+
     # @override
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
-        return super().BFT(callback)
-    
+        result = super().BFT(callback)
+        return docNodes(result)
+
     @auto_update
     def toMarkdown(self):
         from nodoc import Markdown
@@ -186,26 +257,26 @@ class docTree(Tree):
             if node.isImage:
                 continue
                 document.add_image(
-                    url = content['url']
+                    url=content['url']
                 )
 
             if node.isTable:
                 continue
                 document.add_table(
-                    head = content['head'],
-                    lines = content['lines']
+                    head=content['head'],
+                    lines=content['lines']
                 )
 
             if node.isText:
                 document.add_text(content)
 
             title_level += 1
-            if node >> splitSign:
+            if node == splitSign:
                 title_level = 1
-                
+
         self.document = document
         return document
-    
+
     @auto_update
     def toHtml(self):
         result = ''
@@ -221,12 +292,13 @@ class docTree(Tree):
                 char_count = f'...({len(self.document) - 10}字)...'
                 suffix = self.document[-6:-1].replace('\n', '')
                 document = prefix + char_count + suffix
-                
-        size: list[int | list] = [self.data['metadata']['size'], ['B', 'KB', 'MB', 'GB', 'TB', 'PB']]
+
+        size: list[int | list] = [self.data['metadata']
+                                  ['size'], ['B', 'KB', 'MB', 'GB', 'TB', 'PB']]
         while size[0] > 1024 and len(size[1]) > 1:
             size[0] /= 1024
             size[1].pop(0)
-            
+
         result = f"""
 {self.name}
 - 创建时间：{self.data['metadata']['create_time']}
