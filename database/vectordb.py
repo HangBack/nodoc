@@ -22,7 +22,7 @@ _Forest: TypeAlias = list['docTree']
 
 class vectorDB(dataBase):
 
-    def __init__(self, forest: _Forest = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./') -> None:
+    def __init__(self, forest: _Forest = None, mode: Literal['exact', 'low'] = 'exact', cache_folder='./', *, model: SentenceTransformer = None) -> None:
         """
         实例化一个向量数据库对象。
         - forest: _Forest, 树列表，作为数据库的查询树。
@@ -30,15 +30,20 @@ class vectorDB(dataBase):
         - cache_folder: str = './', 数据库模型的缓存路径。
         """
         super().__init__()
-        match mode:
-            case 'low':
-                model = 'BAAI/bge-small-zh'
-            case _:
-                model = 'BAAI/bge-large-zh-v1.5'
-        device = 'cuda' if torch.cuda.is_available() else None
-        self.model = SentenceTransformer(
-            model, cache_folder=cache_folder, device=device)
-        "该数据库使用的模型（该模型必须是或继承自SentenceTransformer）。"
+        if model is None:
+            match mode:
+                case 'low':
+                    model = 'BAAI/bge-small-zh'
+                case _:
+                    model = 'BAAI/bge-large-zh-v1.5'
+            device = 'cuda' if torch.cuda.is_available() else None
+            self.model = SentenceTransformer(
+                model, cache_folder=cache_folder, device=device)
+            "该数据库使用的模型（该模型必须是或继承自SentenceTransformer）。"
+        elif isinstance(model, SentenceTransformer):
+            self.model = model
+        else:
+            raise TypeError(f'期望：{SentenceTransformer}, 实际：{type(model)}')
 
         self.ebmapping: _docNodes = [
             node for tree in forest for node in tree.DFT()]
@@ -64,13 +69,14 @@ class vectorDB(dataBase):
         - text: str, 查询的文本，作为相似性判断的根据。
         - count: int, 查询节点的数量。
         - threshold: float = 0.5, 查询阈值，低于阈值将被抛弃。
-"""
-        maintain_text = self.__find_chinese(text)
-        if maintain_text == '':
+        """
+        query_text = self.__find_chinese(text)
+        if query_text == '':
             return None
         final_text = self.model.encode(
-            maintain_text, normalize_embeddings=True)
+            query_text, normalize_embeddings=True)
         text_vector = np.array([final_text])
+        # pytorch -> fairs
         similarity = (self.embeddings @ text_vector.T).flatten()
         indexs = torch.from_numpy(similarity).topk(count).indices
         indexs = list(indexs)
