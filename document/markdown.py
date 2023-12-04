@@ -22,11 +22,14 @@ REPLACE_FORMATTER = (
     (r'^\s*$',  ''),
 )
 
+RECOGNIZE_FORMATTER = ()
+
 
 class Markdown(Document):
 
     def __init__(self, data: str = "") -> None:
-        super().__init__(data)
+        message = self.normalize(data)
+        super().__init__(message, data)
 
     @classmethod
     def escape(cls, text: str):
@@ -53,11 +56,21 @@ class Markdown(Document):
         text = self.escape(text)
         self.data << text
 
+    def normalize(self):
+        ...
+
     def export(self, name: str, directory: str = './'):
         directory = os.path.abspath(directory)
-        print(directory)
         with open(directory + '/' + name + '.md', 'w+', encoding='utf-8') as file:
             file.write(self.__str__())
+            
+
+    @staticmethod
+    def load(path: str) -> 'Markdown':
+        with open(path, 'r+', encoding='utf-8') as file:
+            text = file.read()
+        return Markdown(text)
+
             
     def __document__(self):
         ...
