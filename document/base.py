@@ -23,12 +23,17 @@ class Data:
 
 class Document(metaclass=abc.ABCMeta):
 
-    def __init__(self, data: str = "") -> None:
+    def __init__(self, message: dict, data: str = "") -> None:
+        self.__message = message
         self.__data: Data = Data(data)
 
     @property
     def data(self) -> Data:
         return self.__data
+
+    @property
+    def message(self) -> Data:
+        return self.__message
     
     @abc.abstractmethod
     def __document__(self):
