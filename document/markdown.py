@@ -1,6 +1,7 @@
 import os
 import re
-from .base import Document
+from typing import Self
+from .base import Data, Document, Message
 
 END = '\n'
 SPACE = '\x20'
@@ -28,15 +29,15 @@ RECOGNIZE_FORMATTER = ()
 class Markdown(Document):
 
     def __init__(self, data: str = "") -> None:
-        message = self.normalize(data)
-        super().__init__(message, data)
+        super().__init__(data)
 
-    @classmethod
-    def escape(cls, text: str):
+    def escape(text: str):
         """
         转义文本
         - text: str, 待转义文本
         """
+        if isinstance(text, Markdown):
+            text = text.content
         for pattern, repl in REPLACE_FORMATTER:
             text = re.sub(pattern, repl, text, flags=re.M)
         return text
@@ -56,14 +57,27 @@ class Markdown(Document):
         text = self.escape(text)
         self.data << text
 
-    def normalize(self):
+    def normalize(self) -> Message:
         ...
 
     def export(self, name: str, directory: str = './'):
         directory = os.path.abspath(directory)
         with open(directory + '/' + name + '.md', 'w+', encoding='utf-8') as file:
             file.write(self.__str__())
-            
+
+    @staticmethod
+    def transform(source: Document) -> 'Markdown':
+        document = Markdown.load_from_message(source.message)
+        return document
+    
+    def load_from_message(message: Message | list[Message]) -> Self:
+        """
+        从消息中加载markdown。
+        - message: Message, 传入的消息。
+        """
+        data = Data()
+
+        return Markdown(data.content)
 
     @staticmethod
     def load(path: str) -> 'Markdown':
