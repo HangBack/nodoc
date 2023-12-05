@@ -1,5 +1,7 @@
 import time
 from typing import Any, Callable, Self, TypedDict, Unpack, Literal
+
+from nodoc.document.base import Document
 from .tree import Node, Nodes, Tree
 import sys
 
@@ -18,8 +20,8 @@ def auto_update(func: Callable):
 class metadata(TypedDict):
     create_time: str  # 数据的创建时间
     modify_time: str  # 数据的修改时间
-    visit_time: str  # 数据的访问时间
-    size: int  # 数据大小
+    visit_time: str   # 数据的访问时间
+    size: int         # 数据大小
 
 
 class dataArg(TypedDict):
@@ -29,7 +31,7 @@ class dataArg(TypedDict):
 
 
 class docArg(TypedDict):
-    head: str  # 文档的标头
+    head: str           # 文档的标头
     metadata: metadata  # 元数据
 
 
@@ -234,6 +236,9 @@ class docTree(Tree):
     def update(self):
         self.data['metadata'].setdefault('size', sys.getsizeof(self.document))
 
+    def from_document(self, document: Document):
+        ...
+
     # @override
     def DFT(self, node=None, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         result = super().DFT(node, callback)
@@ -243,44 +248,6 @@ class docTree(Tree):
     def BFT(self, callback: Callable[[Node], bool] = lambda node: True) -> list[docNode] | None:
         result = super().BFT(callback)
         return docNodes(result)
-
-    @auto_update
-    def toMarkdown(self):
-        from nodoc import Markdown
-        document = Markdown()
-        title_level = 1
-        for node in self.DFT():
-            content = node.data['content']
-            if node.isTitle:
-                document.add_title(content, title_level)
-
-            if node.isImage:
-                continue
-                document.add_image(
-                    url=content['url']
-                )
-
-            if node.isTable:
-                continue
-                document.add_table(
-                    head=content['head'],
-                    lines=content['lines']
-                )
-
-            if node.isText:
-                document.add_text(content)
-
-            title_level += 1
-            if node == splitSign:
-                title_level = 1
-
-        self.document = document
-        return document
-
-    @auto_update
-    def toHtml(self):
-        result = ''
-        self.document = result
 
     def __str__(self):
         document = None

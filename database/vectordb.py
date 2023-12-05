@@ -130,11 +130,9 @@ class vectorDB(dataBase):
 
     def save(self):
         return super().save()
-
+    
     def load(path: str) -> Self:
-        database: Self = dataBase.load(path)
-        database.__path = path
-        return database
+        return super().load(path)
 
     @property
     def data(self):
