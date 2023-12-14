@@ -2,7 +2,7 @@ import os
 import re
 from typing import Self
 from .base import Data, Document, Message
-
+# Use a pipeline as a high-level helper
 END = '\n'
 SPACE = '\x20'
 TITLE_SIGN = '#'
@@ -75,9 +75,29 @@ class Markdown(Document):
         从消息中加载markdown。
         - message: Message, 传入的消息。
         """
-        data = Data()
-
-        return Markdown(data.content)
+        document = Markdown()
+        def recur(message: Message | list[Message]):
+            content = message['content']
+            if isinstance(content, Message):
+                text = recur(content)
+            elif isinstance(content, list):
+                text = []
+                for span in content:
+                    text.append(recur(span))
+                text = "".join(text)
+            match message['kind']:
+                case 'title':
+                    document.add_title(text)
+                case 'image':
+                    document.add_image(text)
+                case 'LaTeX':
+                    document.add_latex(text)
+                case 'table':
+                    document.add_table(text)
+                case 'text':
+                    document.add_text(text)
+        recur(message)
+        return document
 
     @staticmethod
     def load(path: str) -> 'Markdown':
