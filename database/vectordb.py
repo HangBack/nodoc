@@ -7,6 +7,10 @@ from nodoc.const import Embedding
 from sentence_transformers import SentenceTransformer
 import numpy as np
 import os
+from nodoc import debugger
+import faiss
+import ctypes
+from nodoc import const
 
 
 def __import():
@@ -18,6 +22,20 @@ def __import():
 _docNodes: TypeAlias = list['docNode']
 _Embeddings: TypeAlias = np.ndarray[Embedding]
 _Forest: TypeAlias = list['docTree']
+
+
+class c_methods:
+
+    @staticmethod
+    def search(query_matrix: np.ctypeslib._ndptr, query_text: np.ctypeslib._ndptr, rows: int, columns: int) -> int:
+        """
+        搜索查询矩阵与query_text最相似的向量的索引。
+        - query_matrix: _ndptr, 传入一个查询矩阵的指针。
+        - query_text: _ndptr, 传入待查询文本嵌入的指针。
+        - rows: int, 行数。
+        - columns: 列数。
+        返回一个整型索引值。
+        """
 
 
 class vectorDB(dataBase):
@@ -52,8 +70,10 @@ class vectorDB(dataBase):
         self.embeddings: _Embeddings = self.model.encode([
             node.data['content']
             for node in self.ebmapping
-        ], normalize_embeddings=True)
+        ], normalize_embeddings=True).astype(np.double)
         "文本嵌入查询矩阵，用于计算查询相似度，不推荐读取。"
+
+        self.c_methods: c_methods = ctypes.CDLL(const.c_source.vectordb)
 
     def insert(self, index: int, node: 'docNode'):
         self.ebmapping.insert(index, node)
@@ -63,6 +83,54 @@ class vectorDB(dataBase):
             axis=0
         )
 
+    def query_by_faiss(self, text: str, count: int = 1, threshold: float = 0.5) -> Union['docNode', list['docNode']]:
+        """
+        从数据库中查询节点。（基于faiss的查询）
+        - text: str, 查询的文本，作为相似性判断的根据。
+        - count: int, 查询节点的数量。
+        - threshold: float = 0.5, 查询阈值，低于阈值将被抛弃。
+        """
+        query_text = self.__find_chinese(text)
+        if query_text == '':
+            return None
+        final_text = self.model.encode(
+            query_text, normalize_embeddings=True)
+        text_vector = np.array([final_text])
+        # pytorch -> fairs
+        dimension = self.embeddings.shape[-1]
+        indexs = faiss.IndexFlatIP(dimension)
+        indexs.add(self.embeddings)
+        distance, indices = indexs.search(text_vector, count)
+        indexs = list(indices.flatten())
+
+        nodes = []
+        for index in indexs:
+            nodes.append(self.ebmapping[index])
+        if len(nodes) == 1:
+            return nodes[0]
+        return nodes
+
+    def query_by_cpp(self, text: str, count: int = 1, threshold: float = 0.5) -> Union['docNode', list['docNode']]:
+        query_text = self.__find_chinese(text)
+        if query_text == '':
+            return None
+        final_text = self.model.encode(
+            query_text, normalize_embeddings=True)
+        text_vector = np.array(final_text, dtype=np.double)
+        query_matrix = self.embeddings.ctypes.data_as(np.ctypeslib.ndpointer(
+            ctypes.c_double, self.embeddings.ndim, self.embeddings.shape))
+        query_text = text_vector.ctypes.data_as(np.ctypeslib.ndpointer(
+            ctypes.c_double, text_vector.ndim, text_vector.shape))
+        index = self.c_methods.search(
+            query_matrix, query_text, *self.embeddings.shape)
+
+        nodes = []
+        nodes.append(self.ebmapping[index])
+        if len(nodes) == 1:
+            return nodes[0]
+        return nodes
+
+    @debugger.method_time_comparison(query_by_cpp, 10)
     def query(self, text: str, count: int = 1, threshold: float = 0.5) -> Union['docNode', list['docNode']]:
         """
         从数据库中查询节点。
@@ -76,7 +144,7 @@ class vectorDB(dataBase):
         final_text = self.model.encode(
             query_text, normalize_embeddings=True)
         text_vector = np.array([final_text])
-        # pytorch -> fairs
+        # pytorch -> faiss
         similarity = (self.embeddings @ text_vector.T).flatten()
         indexs = torch.from_numpy(similarity).topk(count).indices
         indexs = list(indexs)
@@ -130,7 +198,7 @@ class vectorDB(dataBase):
 
     def save(self):
         return super().save()
-    
+
     def load(path: str) -> Self:
         return super().load(path)
 
