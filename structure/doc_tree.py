@@ -1,5 +1,6 @@
 import time
 from typing import Any, Callable, Self, TypedDict, Unpack, Literal
+from nodoc import const
 
 from nodoc.document.base import Document
 from .tree import Node, Nodes, Tree
@@ -260,18 +261,12 @@ class docTree(Tree):
                 suffix = self.document[-6:-1].replace('\n', '')
                 document = prefix + char_count + suffix
 
-        size: list[int | list] = [self.data['metadata']
-                                  ['size'], ['B', 'KB', 'MB', 'GB', 'TB', 'PB']]
-        while size[0] > 1024 and len(size[1]) > 1:
-            size[0] /= 1024
-            size[1].pop(0)
-
         result = f"""
 {self.name}
 - 创建时间：{self.data['metadata']['create_time']}
 - 修改时间：{self.data['metadata']['modify_time']}
 - 访问时间：{self.data['metadata']['visit_time']}
-- 文档大小：{size[0]:.2f}{size[1][0]}
+- 文档大小：{const.get_size(self.data['metadata']['size'])}
 - 文档内容：{document}
 """
         return result
